@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>极速卡包 4.4 · AI 智能学习工作台</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <style>
+        .app-height {
+            height: 100vh;
+            height: 100dvh;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pulse-dot { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .config-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+        }
+        /* 登录页渐变背景 */
+        .auth-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+        }
+        /* 移动端底部安全区适配 */
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        /* 输入框焦点高亮 */
+        .auth-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        /* 加载动画 */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    /* ============================================================
+       极速卡包 2.0 · UI升级
+       ============================================================ */
+    :root { --app-accent:#4f46e5; --app-accent-2:#2563eb; }
+    html { scroll-behavior:smooth; }
+    body { background:radial-gradient(circle at 20% 0%,#eef2ff 0,#f8fafc 38%,#eef2f7 100%); }
+    button, input, textarea, select { -webkit-tap-highlight-color:transparent; }
+    .app-shell { backdrop-filter:blur(18px); }
+    .upgrade-header { background:linear-gradient(135deg,#1e40af 0%,#4f46e5 55%,#7c3aed 100%) !important; }
+    .upgrade-card { box-shadow:0 10px 30px rgba(15,23,42,.06),0 2px 8px rgba(15,23,42,.04) !important; transition:transform .2s,box-shadow .2s,border-color .2s; }
+    .upgrade-card:hover { transform:translateY(-1px); box-shadow:0 16px 38px rgba(15,23,42,.09) !important; }
+    .study-progress { height:4px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+    .study-progress > div { height:100%; background:linear-gradient(90deg,#2563eb,#7c3aed); transition:width .3s ease; }
+    .kbd { min-width:22px; padding:2px 6px; border:1px solid #d1d5db; border-bottom-width:2px; border-radius:6px; background:#fff; font:600 10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; color:#6b7280; text-align:center; }
+    .dark-mode { background:#0b1120 !important; color:#e5e7eb !important; }
+    .dark-mode #app-root { background:#0f172a !important; }
+    .dark-mode main, .dark-mode #view-study { background:#0f172a !important; }
+    .dark-mode .bg-white { background:#111827 !important; color:#e5e7eb; border-color:#1f2937 !important; }
+    .dark-mode .bg-gray-50 { background:#172033 !important; }
+    .dark-mode .bg-gray-100 { background:#0f172a !important; }
+    .dark-mode .text-gray-800, .dark-mode .text-gray-700 { color:#e5e7eb !important; }
+    .dark-mode .text-gray-600, .dark-mode .text-gray-500, .dark-mode .text-gray-400 { color:#9ca3af !important; }
+    .dark-mode .border-gray-100, .dark-mode .border-gray-200 { border-color:#263244 !important; }
+    .dark-mode input, .dark-mode textarea, .dark-mode select { background:#172033 !important; color:#e5e7eb !important; border-color:#334155 !important; }
+    .dark-mode .kbd { background:#111827; border-color:#374151; color:#9ca3af; }
+    @media (min-width:768px) {
+      #app-root { margin:20px auto; height:calc(100vh - 40px) !important; border-radius:24px; }
+      #view-home, #view-import, #view-cards, #view-settings { padding:28px !important; }
+    }
+    
+/* ===== 极速卡包 3.0 产品级 UI ===== */
+.app-shell{display:flex;flex-direction:column;overflow:hidden;background:#f8fafc}
+.v3-sidebar{display:none}
+.v3-main{min-width:0}
+.v3-page-title{font-size:clamp(1.25rem,2vw,1.7rem);font-weight:800;letter-spacing:-.02em}
+.v3-muted{color:#64748b}
+.v3-kpi{background:linear-gradient(145deg,#fff,#f8fafc);border:1px solid #e2e8f0;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+.v3-kpi .num{font-size:1.65rem;font-weight:900;letter-spacing:-.03em}
+.v3-section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+.v3-bar-chart{height:190px;display:flex;align-items:flex-end;gap:8px;padding:20px 14px 10px}
+.v3-bar{flex:1;min-width:8px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#6366f1,#3b82f6);position:relative;transition:height .35s ease}
+.v3-bar:hover{filter:brightness(1.08)}
+.v3-bar span{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:#94a3b8;white-space:nowrap}
+.v3-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.v3-day{aspect-ratio:1;border-radius:9px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:10px;color:#64748b;position:relative}
+.v3-day.active{background:#4f46e5;color:#fff;font-weight:800}.v3-day.haslog::after{content:'';width:4px;height:4px;border-radius:50%;background:#10b981;position:absolute;bottom:4px}
+.v3-deck-row{display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #eef2f7}.v3-deck-row:last-child{border-bottom:0}
+.v3-mini-progress{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden}.v3-mini-progress i{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#6366f1);border-radius:999px}
+.v3-quick{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.v3-quick button{white-space:nowrap;border:1px solid #e2e8f0;background:#fff;border-radius:11px;padding:9px 12px;font-size:11px;font-weight:700;color:#475569}
+@media(min-width:900px){
+  .app-shell{display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:1fr;height:100vh;height:100dvh}
+  .v3-sidebar{display:flex;grid-column:1;grid-row:1;flex-direction:column;background:#fff;border-right:1px solid #e2e8f0;z-index:40}
+  .v3-main{grid-column:2;grid-row:1;display:flex;flex-direction:column;min-height:0}
+  #app-root>header{grid-column:2;grid-row:1;align-self:start;position:relative;z-index:30}
+  #app-root>main{grid-column:2;grid-row:1;padding-top:64px}
+  #app-root>nav{display:none}
+  .v3-sidebar .brand{padding:24px 20px;border-bottom:1px solid #eef2f7}.v3-sidebar .brand i{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+  .v3-side-btn{display:flex;align-items:center;gap:12px;margin:4px 12px;padding:12px 14px;border-radius:12px;color:#64748b;font-weight:700;font-size:13px;transition:.2s}.v3-side-btn:hover{background:#f1f5f9;color:#334155}.v3-side-btn.active{background:#eef2ff;color:#4f46e5}.v3-side-btn i{width:18px;text-align:center}
+  .v3-sidebar .bottom{margin-top:auto;padding:14px;border-top:1px solid #eef2f7}
+  #view-home,#view-import,#view-analytics,#view-ai,#view-cards,#view-settings{max-width:1280px;margin:auto;width:100%;padding:28px 32px !important}
+}
+.dark-mode .v3-kpi,.dark-mode .v3-section,.dark-mode .v3-quick button,.dark-mode .v3-sidebar{background:#111827!important;border-color:#263244!important}.dark-mode .v3-deck-row{border-color:#263244}.dark-mode .v3-day{background:#172033}.dark-mode .v3-side-btn{color:#94a3b8}.dark-mode .v3-side-btn.active{background:#1e1b4b;color:#a5b4fc}
+
+/* ===== 极速卡包 4.0 · AI Product Layer ===== */
+.v4-ai-hero{background:linear-gradient(135deg,#111827 0%,#312e81 55%,#4f46e5 100%);color:#fff;border-radius:22px;padding:22px;box-shadow:0 16px 40px rgba(49,46,129,.22)}
+.v4-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.v4-tool{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.04);transition:.2s}.v4-tool:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,23,42,.08)}
+.v4-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#eef2ff;color:#4f46e5}.v4-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:10px;font-weight:800}
+.v4-progress{height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden}.v4-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#4f46e5,#7c3aed)}
+.v4-plan-row{display:grid;grid-template-columns:34px minmax(0,1fr) 70px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #eef2f7}.v4-plan-row:last-child{border-bottom:0}.v4-num{width:28px;height:28px;border-radius:9px;background:#eef2ff;color:#4f46e5;display:grid;place-items:center;font-size:11px;font-weight:900}
+.v4-focus{font-variant-numeric:tabular-nums;font-size:46px;font-weight:900;letter-spacing:-.04em}.v4-command{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(6px);z-index:300;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}.v4-command.show{display:flex}.v4-command-box{width:min(620px,calc(100vw - 28px));background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(15,23,42,.25)}.v4-command-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid #f1f5f9;cursor:pointer}.v4-command-item:hover{background:#f8fafc}.v4-empty{padding:28px;text-align:center;color:#94a3b8;font-size:12px}
+.dark-mode .v4-tool,.dark-mode .v4-command-box{background:#111827;border-color:#263244}.dark-mode .v4-plan-row{border-color:#263244}.dark-mode .v4-chip{background:#172033;color:#cbd5e1}.dark-mode .v4-progress{background:#263244}
+@media(max-width:900px){.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.v4-grid{grid-template-columns:1fr}.v4-focus{font-size:40px}}
+</style>
+
+    <!-- 极速卡包4.1 修复版：移动端登录稳定性优化 -->
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- ============================================================ -->
+    <!-- 登录 / 注册 全屏界面 -->
+    <!-- ============================================================ -->
+    <div id="auth-screen" class="fixed inset-0 auth-bg z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="w-full max-w-sm my-4">
+            <!-- 品牌头 -->
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur rounded-2xl mb-3 shadow-lg">
+                    <i class="fa-solid fa-brain text-3xl text-yellow-300"></i>
+                </div>
+                <h1 class="text-white font-bold text-2xl tracking-wide">极速卡包</h1>
+                <p class="text-white/70 text-xs mt-1">智能间隔重复 · 跨端同步刷题</p>
+            </div>
+
+            <!-- 表单卡片 -->
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Tab 切换 -->
+                <div class="flex bg-gray-100 rounded-xl p-1 mb-5">
+                    <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition-all">
+                        登录
+                    </button>
+                    <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all">
+                        注册
+                    </button>
+                </div>
+
+                <!-- 表单主体 -->
+                <div class="space-y-3.5">
+                    <!-- 邮箱 -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">邮箱</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email"
+                                class="auth-input w-full pl-10 pr-3 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <!-- 密码 -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">密码</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="password" id="auth-password" placeholder="至少 6 位字符" autocomplete="current-password"
+                                class="auth-input w-full pl-10 pr-10 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all">
+                            <button type="button" onclick="togglePassword('auth-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 确认密码（仅注册） -->
+                    <div id="confirm-password-wrap" class="hidden">
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">确认密码</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="password" id="auth-password-confirm" placeholder="再次输入密码" autocomplete="new-password"
+                                class="auth-input w-full pl-10 pr-3 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <!-- 错误提示 -->
+                    <div id="auth-error" class="hidden text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg p-2.5 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                        <span id="auth-error-text"></span>
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <button id="auth-submit" onclick="handleAuthSubmit()"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-md active:scale-[0.99] transition-all">
+                        登录
+                    </button>
+
+                    <!-- 忘记密码 -->
+                    <div id="forgot-wrap" class="text-center pt-1">
+                        <button onclick="handleForgotPassword()" class="text-xs text-gray-500 hover:text-indigo-600">
+                            忘记密码？
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部信息 -->
+            <div class="text-center mt-5 space-y-2">
+                <button onclick="showOfflineMode()" class="text-white/70 text-xs underline hover:text-white">
+                    <i class="fa-solid fa-wifi-slash mr-1"></i>暂时离线使用（不开启同步）
+                </button>
+                <p class="text-white/40 text-[10px]">登录后数据将自动同步到您的账号，手机电脑均可访问</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 主应用 -->
+    <!-- ============================================================ -->
+    <div id="app-root" class="app-shell app-height app-shell max-w-md md:max-w-5xl mx-auto flex flex-col bg-gray-50 shadow-2xl overflow-hidden relative hidden">
+
+        <!-- 顶栏 Header -->
+        <aside class="v3-sidebar">
+            <div class="brand flex items-center gap-3"><i class="fa-solid fa-brain"></i><div><div class="font-black tracking-wide">极速卡包</div><div class="text-[10px] text-gray-400 mt-0.5">AI Learning OS</div></div></div>
+            <div class="py-4">
+                <button onclick="switchTab('home')" id="side-home" class="v3-side-btn active"><i class="fa-solid fa-house"></i><span>学习首页</span></button>
+                <button onclick="switchTab('analytics')" id="side-analytics" class="v3-side-btn"><i class="fa-solid fa-chart-line"></i><span>学习分析</span></button>
+                <button onclick="switchTab('ai')" id="side-ai" class="v3-side-btn"><i class="fa-solid fa-sparkles"></i><span>智能助手</span></button>
+                <button onclick="switchTab('import')" id="side-import" class="v3-side-btn"><i class="fa-solid fa-plus-circle"></i><span>批量制卡</span></button>
+                <button onclick="switchTab('cards')" id="side-cards" class="v3-side-btn"><i class="fa-solid fa-layer-group"></i><span>卡片库</span></button>
+                <button onclick="switchTab('settings')" id="side-settings" class="v3-side-btn"><i class="fa-solid fa-gear"></i><span>设置</span></button>
+            </div>
+            <div class="bottom"><div class="text-[10px] text-gray-400 px-2 mb-2">学习状态</div><div class="flex items-center gap-2 px-2 text-xs font-bold"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span><span id="side-sync-text">本地学习模式</span></div></div>
+        </aside>
+
+        <header class="upgrade-header text-white p-4 md:px-6 flex justify-between items-center shrink-0 shadow-md z-10">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-brain text-2xl text-yellow-300"></i>
+                <h1 class="font-bold text-lg tracking-wide">极速卡包</h1>
+            </div>
+            <div class="flex items-center space-x-2 text-xs">
+                <span id="cloud-status-badge" class="px-2.5 py-1 rounded-full bg-blue-700 text-blue-100 flex items-center gap-1.5 border border-blue-500 transition-all">
+                    <i id="cloud-status-icon" class="fa-solid fa-spinner fa-spin text-[10px]"></i> 
+                    <span id="sync-text">初始化...</span>
+                </span>
+                <button onclick="toggleTheme()" id="theme-toggle" class="text-blue-100 hover:text-white px-1.5 py-1" title="切换深浅色模式">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="handleLogout()" class="text-blue-100 hover:text-white px-1.5 py-1" title="退出登录">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容 Router -->
+        <main class="flex-1 overflow-y-auto min-h-0 relative">
+            
+            <!-- 1. 主页看板 -->
+            <section id="view-home" class="p-4 space-y-4">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 upgrade-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-semibold text-gray-400 tracking-wider uppercase" id="current-date">--年--月--日</span>
+                        <span id="cloud-sync-tag" class="text-xs px-2.5 py-0.5 bg-gray-100 text-gray-500 font-medium rounded-full flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> 本地模式
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-blue-50/60 p-3.5 rounded-xl border border-blue-100/50">
+                            <div class="text-xs text-blue-500 font-medium mb-1">今日待学 / 复习</div>
+                            <div class="text-2xl font-black text-blue-700">
+                                <span id="dash-new-count">0</span> <span class="text-sm font-normal text-gray-400">/</span> <span id="dash-review-count" class="text-amber-600">0</span>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100/50">
+                            <div class="text-xs text-indigo-500 font-medium mb-1">今日已刷 / 时长</div>
+                            <div class="text-2xl font-black text-indigo-700">
+                                <span id="dash-done-count">0</span><span class="text-xs font-normal">题</span> 
+                                <span class="text-sm font-normal text-gray-400">|</span> 
+                                <span id="dash-time" class="text-lg">0</span><span class="text-xs font-normal">分</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="flex justify-between items-center text-xs mb-2">
+                            <span class="font-semibold text-gray-500">今日学习进度</span>
+                            <span id="dash-progress-text" class="font-bold text-indigo-600">0%</span>
+                        </div>
+                        <div class="study-progress"><div id="dash-progress-bar" style="width:0%"></div></div>
+                    </div>
+                </div>
+
+                <div class="v3-quick"><button onclick="switchTab('analytics')"><i class="fa-solid fa-chart-line mr-1"></i>查看学习分析</button><button onclick="switchTab('cards')"><i class="fa-solid fa-layer-group mr-1"></i>管理卡片</button><button onclick="switchTab('import')"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>批量制卡</button></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button onclick="openDeckSelectModal('normal')" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 rounded-2xl shadow-lg hover:shadow-xl transition-all text-left flex justify-between items-center group active:scale-[0.98]">
+                        <div>
+                            <div class="font-bold text-lg mb-0.5">开始常规刷题</div>
+                            <div class="text-xs text-blue-100 opacity-90">按题库分类刷题，基于记忆曲线推荐</div>
+                        </div>
+                        <i class="fa-solid fa-circle-play text-3xl opacity-80 group-hover:scale-110 transition-transform"></i>
+                    </button>
+
+                    <button onclick="openDeckSelectModal('wrong')" class="bg-gradient-to-r from-amber-500 to-rose-500 text-white p-5 rounded-2xl shadow-lg hover:shadow-xl transition-all text-left flex justify-between items-center group active:scale-[0.98]">
+                        <div>
+                            <div class="font-bold text-lg mb-0.5">错题专项突破</div>
+                            <div class="text-xs text-amber-100 opacity-90">攻克所有错题，答对自动移出色块</div>
+                        </div>
+                        <i class="fa-solid fa-fire text-3xl opacity-80 group-hover:scale-110 transition-transform"></i>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-blue-500"></i> 卡片库概况
+                    </h3>
+                    <div class="flex justify-between text-xs text-gray-500 text-center py-2 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <div class="font-bold text-base text-gray-800" id="stat-total">0</div>
+                            <div>总卡片数</div>
+                        </div>
+                        <div class="flex-1 border-x border-gray-200">
+                            <div class="font-bold text-base text-amber-600" id="stat-learning">0</div>
+                            <div>学习中</div>
+                        </div>
+                        <div class="flex-1 border-r border-gray-200">
+                            <div class="font-bold text-base text-rose-600" id="stat-wrong">0</div>
+                            <div>错题集</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-base text-green-600" id="stat-mastered">0</div>
+                            <div>已掌握</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. 批量制卡 -->
+            <section id="view-import" class="p-4 space-y-4 hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h2 class="font-bold text-base text-gray-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-file-import text-blue-500"></i> 批量录入题目
+                    </h2>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">1. 输入或选择题库名称</label>
+                        <input type="text" id="import-deck-name" placeholder="例如：计算机二级 / 政治刷题" class="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">2. 选择题型模板</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" id="btn-type-choice" onclick="setImportType('choice')" class="p-3 text-xs font-bold rounded-xl border text-center border-blue-500 bg-blue-50 text-blue-600">
+                                选择题 (单选/多选)
+                            </button>
+                            <button type="button" id="btn-type-tf" onclick="setImportType('tf')" class="p-3 text-xs font-bold rounded-xl border text-center border-gray-200 bg-gray-50 text-gray-600">
+                                判断题
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="import-rules-desc" class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
+                        <p class="font-bold"><i class="fa-solid fa-circle-info"></i> 选择题格式模板：</p>
+                        <p>• 题目与选项间用 <code class="bg-amber-100 px-1 py-0.5 rounded">**</code> 分隔，选项与答案间用 <code class="bg-amber-100 px-1 py-0.5 rounded">**</code> 分隔，每题间用 <code class="bg-amber-100 px-1 py-0.5 rounded">//</code> 分隔。</p>
+                        <p>• 选项换行分隔（无需加 ABC），答案填数字（第几个），多选用英文逗号隔开 (如 <code class="bg-amber-100 px-1 py-0.5 rounded">1,3</code>)。</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">3. 粘贴录入内容</label>
+                        <textarea id="import-textarea" rows="8" placeholder="在此粘贴文本..." class="w-full text-xs p-3 font-mono bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <button onclick="processBatchImport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-[0.99] text-sm">
+                        确认批量生成卡片并同步云端
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. 刷题模式 -->
+            <section id="view-study" class="h-full flex flex-col hidden bg-gray-100">
+                <div class="bg-white px-4 py-3 flex justify-between items-center border-b border-gray-200 shrink-0">
+                    <div class="text-xs font-medium text-gray-500 flex items-center gap-3 flex-wrap">
+                        <span class="text-blue-600 font-bold" id="study-mode-tag">常规刷题</span>
+                        <span id="study-deck-tag" class="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-semibold">全部题库</span>
+                        <span>剩余: <b id="study-remaining-count" class="text-gray-800">0</b></span>
+                    </div>
+                    <button onclick="switchTab('home')" class="text-gray-400 hover:text-gray-600 px-2 py-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 min-h-[220px]">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span id="study-card-type" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700">单选题</span>
+                            <span id="study-card-deck" class="text-xs text-gray-400">默认题库</span>
+                        </div>
+                        
+                        <h3 id="study-card-question" class="text-base font-bold text-gray-800 leading-relaxed mb-6">
+                            题目加载中...
+                        </h3>
+
+                        <div id="study-options-container" class="space-y-2.5"></div>
+                        <div class="mt-5 flex items-center justify-center gap-2 text-[10px] text-gray-400">
+                            <span>快捷键</span><span class="kbd">1-4</span><span>选项</span><span class="kbd">Enter</span><span>提交</span><span class="kbd">← →</span><span>选择</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border-t border-gray-200 p-4 shrink-0 shadow-lg sticky bottom-0 z-20 safe-bottom">
+                    <button id="btn-submit-answer" onclick="checkAnswer()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-base shadow-md active:scale-[0.99] transition-all">
+                        提交答案
+                    </button>
+
+                    <div id="srs-rating-box" class="hidden grid grid-cols-4 gap-2">
+                        <button onclick="rateCard('forget')" class="bg-rose-50 text-rose-600 border border-rose-200 py-3 rounded-xl flex flex-col items-center hover:bg-rose-100">
+                            <span class="text-xs font-bold">忘记</span>
+                            <span class="text-[10px] opacity-75">重来</span>
+                        </button>
+                        <button onclick="rateCard('hard')" class="bg-amber-50 text-amber-600 border border-amber-200 py-3 rounded-xl flex flex-col items-center hover:bg-amber-100">
+                            <span class="text-xs font-bold">困难</span>
+                            <span class="text-[10px] opacity-75">加频</span>
+                        </button>
+                        <button onclick="rateCard('normal')" class="bg-blue-50 text-blue-600 border border-blue-200 py-3 rounded-xl flex flex-col items-center hover:bg-blue-100">
+                            <span class="text-xs font-bold">一般</span>
+                            <span class="text-[10px] opacity-75">消除错题</span>
+                        </button>
+                        <button onclick="rateCard('easy')" class="bg-emerald-50 text-emerald-600 border border-emerald-200 py-3 rounded-xl flex flex-col items-center hover:bg-emerald-100">
+                            <span class="text-xs font-bold">简单</span>
+                            <span class="text-[10px] opacity-75">完全掌握</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 卡片管理 -->
+            <section id="view-cards" class="p-4 space-y-3 hidden">
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 space-y-2.5 text-xs">
+                    <div class="font-bold text-gray-700 flex justify-between items-center">
+                        <span><i class="fa-solid fa-filter text-blue-500"></i> 卡片条件筛选</span>
+                        <button onclick="resetFilters()" class="text-blue-600 text-[11px]">重置</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="filter-deck" onchange="renderCardsList()" class="p-2 bg-gray-50 border rounded-lg">
+                            <option value="all">题库：全部</option>
+                        </select>
+                        <select id="filter-type" onchange="renderCardsList()" class="p-2 bg-gray-50 border rounded-lg">
+                            <option value="all">今日待学：全部</option>
+                            <option value="new">新卡</option>
+                            <option value="review">复习卡</option>
+                        </select>
+                        <select id="filter-status" onchange="renderCardsList()" class="p-2 bg-gray-50 border rounded-lg">
+                            <option value="all">掌握程度：全部</option>
+                            <option value="unlearned">未学习</option>
+                            <option value="learning">学习中</option>
+                            <option value="mastered">掌握中</option>
+                        </select>
+                        <select id="filter-rating" onchange="renderCardsList()" class="p-2 bg-gray-50 border rounded-lg">
+                            <option value="all">最近回答：全部</option>
+                            <option value="forget">忘记</option>
+                            <option value="hard">困难</option>
+                            <option value="normal">一般</option>
+                            <option value="easy">简单</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="cards-list-container" class="space-y-2.5 pb-6"></div>
+            </section>
+
+            <!-- 4. 学习分析 -->
+            <section id="view-analytics" class="p-4 space-y-4 hidden">
+                <div><div class="v3-page-title">学习分析</div><div class="text-xs text-gray-400 mt-1">把学习记录变成可执行的复习决策</div></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3"><div class="v3-kpi"><div class="text-xs text-gray-400">累计答题</div><div id="an-total-done" class="num mt-1">0</div></div><div class="v3-kpi"><div class="text-xs text-gray-400">准确率</div><div id="an-accuracy" class="num mt-1">0%</div></div><div class="v3-kpi"><div class="text-xs text-gray-400">连续学习</div><div id="an-streak" class="num mt-1">0 天</div></div><div class="v3-kpi"><div class="text-xs text-gray-400">已掌握</div><div id="an-mastered" class="num mt-1">0</div></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="v3-section p-5"><div class="font-black text-sm mb-2">近 14 天学习活动</div><div id="an-chart" class="v3-bar-chart"></div></div><div class="v3-section p-5"><div class="flex justify-between font-black text-sm mb-3"><span>本月学习日历</span><span id="an-calendar-title" class="text-xs text-gray-400"></span></div><div class="grid grid-cols-7 gap-2 text-[9px] text-gray-400 mb-2 text-center"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="an-calendar" class="v3-calendar"></div></div></div>
+                <div class="v3-section p-5"><div class="font-black text-sm mb-2">题库掌握度</div><div id="an-decks"></div></div>
+            </section>
+
+            <!-- 5. 智能助手 -->
+            <section id="view-ai" class="p-4 space-y-4 hidden">
+                <div class="v4-ai-hero">
+                    <div class="flex items-start justify-between gap-4">
+                        <div><div class="v4-chip bg-white/10 text-white/80 mb-3"><i class="fa-solid fa-wand-magic-sparkles"></i> 4.0 SMART ENGINE</div><h2 class="text-xl md:text-2xl font-black">智能学习助手</h2><p class="text-xs text-indigo-100 mt-2 leading-relaxed">根据你的题库、错题与学习记录，自动生成今日重点、弱项分析与学习计划。当前版本在浏览器本地运行，不上传学习内容。</p></div>
+                        <div class="hidden sm:grid w-12 h-12 rounded-2xl bg-white/10 place-items-center"><i class="fa-solid fa-brain text-xl"></i></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-5"><div class="bg-white/10 rounded-xl p-3"><div class="text-[10px] text-indigo-100">待复习</div><div id="ai-due" class="text-xl font-black mt-1">0</div></div><div class="bg-white/10 rounded-xl p-3"><div class="text-[10px] text-indigo-100">弱项</div><div id="ai-weak" class="text-xl font-black mt-1">0</div></div><div class="bg-white/10 rounded-xl p-3"><div class="text-[10px] text-indigo-100">今日目标</div><div id="ai-goal" class="text-xl font-black mt-1">20</div></div></div>
+                </div>
+                <div class="v4-grid">
+                    <button class="v4-tool text-left" onclick="generateSmartPlan()"><div class="v4-icon"><i class="fa-solid fa-route"></i></div><div class="font-black text-sm mt-3">生成今日计划</div><div class="text-[10px] text-gray-400 mt-1">按待复习、错题、薄弱卡排序</div></button>
+                    <button class="v4-tool text-left" onclick="analyzeWeakness()"><div class="v4-icon"><i class="fa-solid fa-radar"></i></div><div class="font-black text-sm mt-3">弱项雷达</div><div class="text-[10px] text-gray-400 mt-1">找出最需要重复的知识点</div></button>
+                    <button class="v4-tool text-left" onclick="openSmartGenerator()"><div class="v4-icon"><i class="fa-solid fa-file-circle-plus"></i></div><div class="font-black text-sm mt-3">内容 → 卡片</div><div class="text-[10px] text-gray-400 mt-1">粘贴笔记，快速生成练习卡</div></button>
+                    <button class="v4-tool text-left" onclick="startFocusTimer()"><div class="v4-icon"><i class="fa-solid fa-stopwatch"></i></div><div class="font-black text-sm mt-3">专注 25 分钟</div><div class="text-[10px] text-gray-400 mt-1">进入专注学习计时</div></button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="v3-section p-5"><div class="flex justify-between items-center mb-3"><h3 class="font-black text-sm">今日智能计划</h3><button onclick="generateSmartPlan()" class="text-xs text-indigo-600 font-bold">重新生成</button></div><div id="ai-plan"><div class="v4-empty">点击「生成今日计划」开始</div></div></div>
+                    <div class="v3-section p-5"><div class="flex justify-between items-center mb-3"><h3 class="font-black text-sm">弱项雷达</h3><span class="v4-chip">本地分析</span></div><div id="ai-weak-list"><div class="v4-empty">点击「弱项雷达」分析你的错题与困难卡</div></div></div>
+                </div>
+                <div id="ai-generator" class="v3-section p-5 hidden"><div class="flex justify-between items-center mb-3"><h3 class="font-black text-sm">内容 → 卡片</h3><button onclick="closeSmartGenerator()" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button></div><textarea id="ai-source" rows="7" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs outline-none" placeholder="粘贴学习笔记，例如：
+TCP 是面向连接的传输层协议。它通过三次握手建立连接。
+UDP 是无连接协议，开销较小，适合实时场景。"></textarea><div class="flex gap-2 mt-3"><input id="ai-deck" class="flex-1 p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs" value="AI生成题库" placeholder="题库名称"><button onclick="generateCardsFromNotes()" class="px-4 py-3 rounded-xl bg-indigo-600 text-white text-xs font-black">生成卡片</button></div><div id="ai-generated" class="mt-4 space-y-2"></div></div>
+            </section>
+
+            <!-- 6. 设置 -->
+            <section id="view-settings" class="p-4 space-y-4 hidden">
+                <!-- 账户信息 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h2 class="font-bold text-base text-gray-800 border-b pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-user-circle text-blue-500"></i> 账户信息
+                    </h2>
+                    <div class="p-3.5 bg-blue-50 border border-blue-100 rounded-xl text-xs space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-bold">登录邮箱：</span>
+                            <span id="settings-email" class="font-mono text-[11px] text-blue-700 font-bold truncate max-w-[60%]">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-bold">用户 UID：</span>
+                            <span id="user-uid-display" class="font-mono text-[10px] bg-white px-2 py-0.5 rounded border text-blue-600 truncate max-w-[60%]">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-bold">同步状态：</span>
+                            <span id="sync-status-label" class="font-bold text-emerald-600">已连接</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="reloadAllFromCloud()" class="flex-1 bg-blue-600 text-white text-xs font-bold py-3 rounded-xl shadow-md active:scale-[0.98] transition-transform">
+                            <i class="fa-solid fa-arrows-rotate mr-1"></i> 拉取云端
+                        </button>
+                        <button onclick="forcePushToCloud()" class="flex-1 bg-emerald-600 text-white text-xs font-bold py-3 rounded-xl shadow-md active:scale-[0.98] transition-transform">
+                            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> 覆盖云端
+                        </button>
+                    </div>
+                    <button onclick="handleLogout()" class="w-full bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold py-3 rounded-xl hover:bg-rose-100 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> 退出登录
+                    </button>
+                </div>
+
+                <!-- Firebase 配置（可选） -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h2 class="font-bold text-base text-gray-800 border-b pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-blue-500"></i> 云端同步引擎
+                    </h2>
+                    <details class="text-xs">
+                        <summary class="cursor-pointer font-bold text-gray-600 flex items-center gap-1">
+                            <i class="fa-solid fa-gear"></i> 配置 Firebase 项目（点击展开）
+                        </summary>
+                        <div class="mt-3 space-y-2 config-card">
+                            <p class="text-gray-500 text-[11px]">不配置则使用默认项目。填入自己的 Firebase 项目可实现完全私有化。</p>
+                            <input type="text" id="cfg-apiKey" placeholder="apiKey" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <input type="text" id="cfg-authDomain" placeholder="authDomain" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <input type="text" id="cfg-projectId" placeholder="projectId" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <input type="text" id="cfg-storageBucket" placeholder="storageBucket" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <input type="text" id="cfg-messagingSenderId" placeholder="messagingSenderId" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <input type="text" id="cfg-appId" placeholder="appId" class="w-full p-2 bg-white border border-gray-200 rounded-lg font-mono text-[11px]">
+                            <button onclick="saveFirebaseConfig()" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg shadow active:scale-[0.98] transition-transform">
+                                保存并重新加载
+                            </button>
+                            <button onclick="clearFirebaseConfig()" class="w-full bg-gray-100 text-gray-600 text-xs font-bold py-2.5 rounded-lg active:scale-[0.98] transition-transform">
+                                清除配置
+                            </button>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- 数据备份 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <h2 class="font-bold text-base text-gray-800 border-b pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-emerald-500"></i> 数据备份与恢复
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="exportData()" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold py-3 rounded-xl hover:bg-emerald-100 transition-colors">
+                            <i class="fa-solid fa-download mr-1"></i> 导出备份
+                        </button>
+                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-upload mr-1"></i> 导入备份
+                        </button>
+                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)" />
+                        <button onclick="clearAllLocalData()" class="flex-1 bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold py-3 rounded-xl hover:bg-rose-100 transition-colors">
+                            <i class="fa-solid fa-trash-can mr-1"></i> 清空本地
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-400">导出为 JSON 文件，可在其他设备导入恢复。云端同步会自动合并。</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- 底部导航 -->
+        <nav class="bg-white border-t border-gray-200 flex justify-around items-center h-16 shrink-0 z-30 shadow-lg safe-bottom">
+            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-blue-600 font-bold transition-colors">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px]">主页</span>
+            </button>
+            <button onclick="switchTab('import')" id="nav-import" class="flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors">
+                <i class="fa-solid fa-plus-circle text-lg"></i>
+                <span class="text-[10px]">制卡</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="nav-analytics" class="flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors"><i class="fa-solid fa-chart-line text-lg"></i><span class="text-[10px]">分析</span></button>
+            <button onclick="switchTab('ai')" id="nav-ai" class="flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors"><i class="fa-solid fa-sparkles text-lg"></i><span class="text-[10px]">AI</span></button>
+            <button onclick="switchTab('cards')" id="nav-cards" class="flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors">
+                <i class="fa-solid fa-layer-group text-lg"></i>
+                <span class="text-[10px]">卡片库</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[10px]">我的</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- 弹窗：选择题库 -->
+    <div id="modal-deck-select" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-gray-800 text-sm" id="deck-modal-title">选择刷题题库</h3>
+                <button onclick="closeModal('modal-deck-select')" class="text-gray-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="deck-select-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <!-- 弹窗：卡片详情 -->
+    <div id="modal-card-detail" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-gray-800 text-sm">卡片详细信息</h3>
+                <button onclick="closeModal('modal-card-detail')" class="text-gray-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modal-detail-content" class="text-xs space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- 弹窗：编辑卡片 -->
+    <div id="modal-card-edit" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-gray-800 text-sm">修改卡片内容</h3>
+                <button onclick="closeModal('modal-card-edit')" class="text-gray-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="text-xs space-y-3">
+                <div>
+                    <label class="block font-bold text-gray-600 mb-1">题库名称</label>
+                    <input type="text" id="edit-deck" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-600 mb-1">题目描述</label>
+                    <textarea id="edit-question" rows="3" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-600 mb-1">选项 (每行一个)</label>
+                    <textarea id="edit-options" rows="4" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-600 mb-1">正确答案 (选项序号，多选用逗号隔开)</label>
+                    <input type="text" id="edit-answer" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="pt-2 border-t mt-2">
+                    <button onclick="saveCardEdit()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md active:scale-[0.98] transition-all">保存修改并同步</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 诊断浮层 -->
+    <div id="firebase-diagnostic" class="fixed bottom-4 left-4 right-4 z-[200] hidden">
+      <div class="max-w-xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl p-4 border border-white/10">
+        <div class="flex items-center justify-between gap-3 mb-2">
+          <div class="font-bold">Firebase 连接诊断</div>
+          <button onclick="document.getElementById('firebase-diagnostic').classList.add('hidden')" class="text-slate-300 text-xl">×</button>
+        </div>
+        <div id="firebase-diagnostic-list" class="text-xs space-y-1"></div>
+        <div id="firebase-diagnostic-error" class="mt-2 text-xs text-rose-300 break-all"></div>
+      </div>
+    </div>
+
+    <!-- JS 逻辑 -->
+    <script>
+        // ============================================================
+        //  配置管理
+        // ============================================================
+        const CONFIG_KEY = 'flashcard_firebase_config';
+
+        function loadFirebaseConfig() {
+            try {
+                const saved = localStorage.getItem(CONFIG_KEY);
+                if (saved) {
+                    const cfg = JSON.parse(saved);
+                    if (cfg.apiKey && cfg.projectId && cfg.appId) return cfg;
+                }
+            } catch (e) {}
+            return {
+                apiKey: "AIzaSyDhYampt7E0UBYoRVkf7umCx7Boq54EZWk",
+                authDomain: "flashcard-app-cfdd0.firebaseapp.com",
+                databaseURL: "https://flashcard-app-cfdd0-default-rtdb.firebaseio.com",
+                projectId: "flashcard-app-cfdd0",
+                storageBucket: "flashcard-app-cfdd0.firebasestorage.app",
+                messagingSenderId: "46653164662",
+                appId: "1:46653164662:web:16f44e49d79725cd0be357",
+                measurementId: "G-VDTC4D87NC"
+            };
+        }
+
+        function saveFirebaseConfig() {
+            const cfg = {
+                apiKey: document.getElementById('cfg-apiKey').value.trim(),
+                authDomain: document.getElementById('cfg-authDomain').value.trim(),
+                projectId: document.getElementById('cfg-projectId').value.trim(),
+                storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+                messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+                appId: document.getElementById('cfg-appId').value.trim()
+            };
+            if (!cfg.apiKey || !cfg.projectId || !cfg.appId) {
+                alert('请至少填写 apiKey、projectId、appId 三项。');
+                return;
+            }
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+            alert('配置已保存，页面将重新加载以生效。');
+            location.reload();
+        }
+
+        function clearFirebaseConfig() {
+            if (confirm('确定清除 Firebase 配置？将恢复默认项目。')) {
+                localStorage.removeItem(CONFIG_KEY);
+                location.reload();
+            }
+        }
+
+        function fillConfigForm() {
+            const cfg = loadFirebaseConfig();
+            document.getElementById('cfg-apiKey').value = cfg.apiKey || '';
+            document.getElementById('cfg-authDomain').value = cfg.authDomain || '';
+            document.getElementById('cfg-projectId').value = cfg.projectId || '';
+            document.getElementById('cfg-storageBucket').value = cfg.storageBucket || '';
+            document.getElementById('cfg-messagingSenderId').value = cfg.messagingSenderId || '';
+            document.getElementById('cfg-appId').value = cfg.appId || '';
+        }
+
+        // ============================================================
+        //  Firebase 初始化
+        // ============================================================
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'flashcard-app-default';
+        let firebaseConfig = loadFirebaseConfig();
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try { firebaseConfig = JSON.parse(__firebase_config); } catch (e) {}
+        }
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let isCloudAvailable = false;
+        let unsubscribeCardsListener = null;
+        let isOfflineMode = false;
+        let authObserverStarted = false;
+        let authWatchdog = null;
+        // 手机 App/WebView 专用 REST 认证通道：绕过部分 WebView 对 Firebase Auth SDK 请求的兼容问题。
+        const isMobileApp = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+        let restAuth = null;
+        let restPollTimer = null;
+
+        function firebaseDiag(step, state, detail = '') {
+            const box = document.getElementById('firebase-diagnostic');
+            const list = document.getElementById('firebase-diagnostic-list');
+            const err = document.getElementById('firebase-diagnostic-error');
+            if (!box || !list) return;
+            box.classList.remove('hidden');
+            const icon = state === 'ok' ? '✅' : state === 'fail' ? '❌' : '⏳';
+            const row = document.createElement('div');
+            row.innerHTML = `<span>${icon} ${step}</span>${detail ? ` <span class="text-slate-300">${String(detail).replace(/[<>]/g,'')}</span>` : ''}`;
+            list.appendChild(row);
+            if (state === 'fail' && err) err.textContent = detail || '';
+        }
+
+        function firebaseErrorText(e) {
+            if (!e) return '未知错误';
+            return `${e.code || 'unknown'}: ${e.message || e}`;
+        }
+
+        try {
+            firebaseDiag('Firebase SDK', typeof firebase !== 'undefined' ? 'ok' : 'fail', typeof firebase !== 'undefined' ? '已加载' : 'SDK 未加载');
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            auth = firebase.auth();
+            firebaseDiag('Firebase 初始化', 'ok', firebaseConfig.projectId);
+        } catch (e) {
+            console.log("Firebase 初始化失败:", e);
+            firebaseDiag('Firebase 初始化', 'fail', firebaseErrorText(e));
+        }
+
+        // 本地数据
+        let appData = {
+            cards: [],
+            logs: [],
+            importType: 'choice'
+        };
+        let currentStudyQueue = [];
+        let currentCardIndex = 0;
+        let selectedOptions = [];
+        let currentStudyMode = 'normal';
+
+        // ============================================================
+        //  生命周期
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            initDateDisplay();
+            fillConfigForm();
+            initAuthFlow();
+        });
+
+        function initDateDisplay() {
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+            document.getElementById('current-date').innerText = dateStr;
+        }
+
+        // ============================================================
+        //  认证流程
+        // ============================================================
+        function restAuthKey(){ return 'flashcard_rest_auth_v1'; }
+        function restApiBase(){ return `https://identitytoolkit.googleapis.com/v1`; }
+        function restFirestoreBase(){ return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(firebaseConfig.projectId)}/databases/(default)/documents`; }
+        function saveRestAuth(){ try{ localStorage.setItem(restAuthKey(), JSON.stringify(restAuth)); }catch(e){} }
+        function loadRestAuth(){ try{ const x=JSON.parse(localStorage.getItem(restAuthKey())||'null'); return x&&x.idToken&&x.localId?x:null; }catch(e){ return null; } }
+        function clearRestAuth(){ restAuth=null; try{localStorage.removeItem(restAuthKey());}catch(e){} if(restPollTimer){clearInterval(restPollTimer);restPollTimer=null;} }
+        async function fetchWithTimeout(url, options={}, ms=15000){
+            const ctrl = new AbortController();
+            const timer = setTimeout(()=>ctrl.abort(), ms);
+            try { return await fetch(url,{...options,signal:ctrl.signal}); }
+            finally { clearTimeout(timer); }
+        }
+        async function restIdentityRequest(action, payload){
+            const res=await fetchWithTimeout(`${restApiBase()}/accounts:${action}?key=${encodeURIComponent(firebaseConfig.apiKey)}`,{
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+            },15000);
+            let data={}; try{data=await res.json();}catch(e){}
+            if(!res.ok){ const err=new Error(data?.error?.message||`HTTP ${res.status}`); err.code=(data?.error?.message||'').toLowerCase(); throw err; }
+            return data;
+        }
+        async function restSignIn(email,password,register=false){
+            const data=await restIdentityRequest(register?'signUp':'signInWithPassword',{email,password,returnSecureToken:true});
+            restAuth={idToken:data.idToken,refreshToken:data.refreshToken,localId:data.localId,email:data.email||email,expiresAt:Date.now()+Math.max(60000,(Number(data.expiresIn)||3600)*1000-60000)};
+            saveRestAuth();
+            return {uid:data.localId,email:data.email||email};
+        }
+        async function restRefresh(){
+            if(!restAuth?.refreshToken) return false;
+            const res=await fetchWithTimeout(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(firebaseConfig.apiKey)}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=refresh_token&refresh_token=${encodeURIComponent(restAuth.refreshToken)}`},12000);
+            let data={}; try{data=await res.json();}catch(e){}
+            if(!res.ok) return false;
+            restAuth.idToken=data.id_token; restAuth.refreshToken=data.refresh_token||restAuth.refreshToken; restAuth.localId=data.user_id||restAuth.localId; restAuth.expiresAt=Date.now()+Math.max(60000,(Number(data.expires_in)||3600)*1000-60000); saveRestAuth(); return true;
+        }
+        async function ensureRestToken(){
+            if(!restAuth) return false;
+            if(Date.now()<restAuth.expiresAt) return true;
+            return await restRefresh();
+        }
+        function fsValue(v){
+            if(v===null||v===undefined) return {nullValue:null};
+            if(typeof v==='boolean') return {booleanValue:v};
+            if(typeof v==='number') return Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};
+            if(typeof v==='string') return {stringValue:v};
+            if(Array.isArray(v)) return {arrayValue:{values:v.map(fsValue)}};
+            if(typeof v==='object') { const fields={}; Object.keys(v).forEach(k=>fields[k]=fsValue(v[k])); return {mapValue:{fields}}; }
+            return {stringValue:String(v)};
+        }
+        function fromFsValue(v){
+            if(!v) return null;
+            if('stringValue' in v) return v.stringValue;
+            if('integerValue' in v) return Number(v.integerValue);
+            if('doubleValue' in v) return v.doubleValue;
+            if('booleanValue' in v) return v.booleanValue;
+            if('nullValue' in v) return null;
+            if('timestampValue' in v) return v.timestampValue;
+            if('arrayValue' in v) return (v.arrayValue.values||[]).map(fromFsValue);
+            if('mapValue' in v){ const o={}; Object.entries(v.mapValue.fields||{}).forEach(([k,x])=>o[k]=fromFsValue(x)); return o; }
+            return null;
+        }
+        function cardDocPath(id){ return `${restFirestoreBase()}/artifacts/${encodeURIComponent(appId)}/users/${encodeURIComponent(currentUser.uid)}/cards/${encodeURIComponent(id)}`; }
+        async function restFirestoreFetch(url, options={}){
+            if(!(await ensureRestToken())) throw new Error('云端登录已过期，请重新登录');
+            const headers={...(options.headers||{}),Authorization:`Bearer ${restAuth.idToken}`};
+            let res=await fetchWithTimeout(url,{...options,headers},15000);
+            if(res.status===401 && await restRefresh()) res=await fetchWithTimeout(url,{...options,headers:{...(options.headers||{}),Authorization:`Bearer ${restAuth.idToken}`}},15000);
+            let data={}; try{data=await res.json();}catch(e){}
+            if(!res.ok){ const err=new Error(data?.error?.message||`Firestore HTTP ${res.status}`); err.status=res.status; throw err; }
+            return data;
+        }
+        async function restPullCards(){
+            const data=await restFirestoreFetch(`${restFirestoreBase()}/artifacts/${encodeURIComponent(appId)}/users/${encodeURIComponent(currentUser.uid)}/cards?pageSize=1000`);
+            const cards=(data.documents||[]).map(d=>({id:d.name.split('/').pop(),...(Object.fromEntries(Object.entries(d.fields||{}).map(([k,v])=>[k,fromFsValue(v)])))}));
+            if(cards.length){appData.cards=cards;saveToLocalStorageOnly();}
+            return cards;
+        }
+        async function restWriteCards(cards){
+            if(!cards?.length)return 0;
+            for(let i=0;i<cards.length;i+=450){
+                const chunk=cards.slice(i,i+450);
+                const writes=chunk.map(card=>({update:{name:cardDocPath(card.id),fields:Object.fromEntries(Object.entries(card).filter(([k])=>k!=='id').map(([k,v])=>[k,fsValue(v)]))}}));
+                await restFirestoreFetch(`${restFirestoreBase()}:commit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({writes})});
+            }
+            return cards.length;
+        }
+        async function restDeleteCard(id){ await restFirestoreFetch(cardDocPath(id),{method:'DELETE'}); }
+        function startRestPolling(){
+            if(restPollTimer)clearInterval(restPollTimer);
+            restPollTimer=setInterval(async()=>{ if(!currentUser||!restAuth)return; try{await restPullCards();updateDashboard();renderCardsList();updateCloudUI('success','云端已同步');}catch(e){console.warn('REST 云同步:',e);}},30000);
+        }
+        async function initMobileRestAuth(){
+            try{
+                const saved=loadRestAuth();
+                if(saved){restAuth=saved; if(await ensureRestToken()){ currentUser={uid:restAuth.localId,email:restAuth.email}; isCloudAvailable=true; isOfflineMode=false; showApp(); setAuthLoading(false); updateCloudUI('success','云端已连接'); await restPullCards(); startRestPolling(); return true; } clearRestAuth(); }
+            }catch(e){clearRestAuth();}
+            return false;
+        }
+
+        async function initAuthFlow() {
+            // 手机 App/WebView：直接走 Firebase 官方 REST Auth，避免部分 WebView 中 SDK 请求长期 pending。
+            if (isMobileApp && auth) {
+                const restored = await initMobileRestAuth();
+                if (!restored) { showAuthScreen(); setAuthLoading(false); }
+                return;
+            }
+            if (!auth) {
+                firebaseDiag('Auth 服务', 'fail', 'Firebase Auth 未初始化');
+                enterOfflineMode();
+                return;
+            }
+
+            // 移动端 WebView / PWA 有时会让 LOCAL persistence 卡住。
+            // 关键原则：绝不能让“设置持久化”阻塞 Auth 状态监听和登录界面。
+            let persistenceReady = false;
+            const persistencePromise = (async () => {
+                try {
+                    await Promise.race([
+                        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Auth 持久化初始化超时')), 2500))
+                    ]);
+                    persistenceReady = true;
+                    firebaseDiag('Auth 持久化', 'ok', 'LOCAL');
+                    return true;
+                } catch (e) {
+                    console.warn('LOCAL persistence 不可用，尝试 SESSION:', e);
+                    firebaseDiag('Auth 持久化', 'fail', firebaseErrorText(e));
+                    try {
+                        await Promise.race([
+                            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('SESSION 持久化初始化超时')), 1500))
+                        ]);
+                        persistenceReady = true;
+                        firebaseDiag('Auth 持久化', 'ok', 'SESSION 备用模式');
+                        return true;
+                    } catch (e2) {
+                        // 某些手机 App 内置浏览器完全禁止 storage；继续使用内存认证。
+                        console.warn('SESSION persistence 也不可用，继续内存模式:', e2);
+                        firebaseDiag('Auth 持久化', 'wait', '手机环境不支持持久化，继续登录');
+                        return false;
+                    }
+                }
+            })();
+
+            // 先启动 Auth 状态监听，不能等待 persistence。
+            authObserverStarted = true;
+            firebaseDiag('Auth 状态监听', 'wait', '等待 currentUser');
+
+            authWatchdog = setTimeout(() => {
+                if (!currentUser) {
+                    firebaseDiag('Auth 状态监听', 'fail', '10 秒内没有返回用户状态');
+                    showAuthScreen();
+                    setAuthLoading(false);
+                    showAuthError('登录状态响应超时。请检查手机网络，或关闭后重新打开 App。');
+                }
+            }, 10000);
+
+            auth.onAuthStateChanged(async (user) => {
+                if (authWatchdog) { clearTimeout(authWatchdog); authWatchdog = null; }
+                firebaseDiag('Auth 状态监听', 'ok', user ? `已登录 ${user.email || user.uid}` : '未登录');
+                setAuthLoading(false);
+
+                if (user) {
+                    currentUser = user;
+                    isCloudAvailable = true;
+                    isOfflineMode = false;
+                    showApp();
+                    document.getElementById('settings-email').innerText = user.email || user.uid;
+                    document.getElementById('user-uid-display').innerText = user.uid;
+                    document.getElementById('sync-status-label').innerText = '已连接';
+                    updateCloudUI('success', '云端已连接');
+                    firebaseDiag('Firestore', 'wait', '测试读取');
+                    listenToCloudCollection();
+
+                    // 登录成功后立即进入应用；云同步完全后台化，不阻塞界面。
+                    Promise.race([
+                        pullCloudData(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore 响应超过 8 秒')), 8000))
+                    ]).then(() => {
+                        firebaseDiag('Firestore', 'ok', '读取完成');
+                        updateCloudUI('success', '云端已同步');
+                        updateDashboard();
+                        renderCardsList();
+                    }).catch((err) => {
+                        firebaseDiag('Firestore', 'fail', firebaseErrorText(err));
+                        updateCloudUI('warning', '云同步异常，本地继续使用');
+                        updateDashboard();
+                        renderCardsList();
+                    });
+                } else {
+                    currentUser = null;
+                    isCloudAvailable = false;
+                    if (unsubscribeCardsListener) { unsubscribeCardsListener(); unsubscribeCardsListener = null; }
+                    showAuthScreen();
+                }
+            }, (error) => {
+                if (authWatchdog) { clearTimeout(authWatchdog); authWatchdog = null; }
+                setAuthLoading(false);
+                firebaseDiag('Auth 状态监听', 'fail', firebaseErrorText(error));
+                showAuthScreen();
+                showAuthError('Firebase 认证状态读取失败：' + (error.code || error.message));
+            });
+
+            // persistence 失败也不能卡住页面；仅用于后续登录时等待最多 3 秒。
+            await Promise.race([
+                persistencePromise,
+                new Promise(resolve => setTimeout(resolve, 3000))
+            ]);
+        }
+
+        function showAuthScreen() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-root').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-root').classList.remove('hidden');
+            updateDashboard();
+        }
+
+        function enterOfflineMode() {
+            isOfflineMode = true;
+            isCloudAvailable = false;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-root').classList.remove('hidden');
+            document.getElementById('settings-email').innerText = '离线模式';
+            document.getElementById('user-uid-display').innerText = '-';
+            document.getElementById('sync-status-label').innerText = '本地存储';
+            updateCloudUI('offline', '本地模式');
+            updateDashboard();
+        }
+
+        function showOfflineMode() {
+            if (confirm('离线使用将无法同步数据到云端，确定继续？')) {
+                enterOfflineMode();
+            }
+        }
+
+        // 认证 Tab 切换
+        let authTab = 'login';
+
+        function switchAuthTab(tab) {
+            authTab = tab;
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const confirmWrap = document.getElementById('confirm-password-wrap');
+            const submitBtn = document.getElementById('auth-submit');
+            const forgotWrap = document.getElementById('forgot-wrap');
+            const authError = document.getElementById('auth-error');
+
+            authError.classList.add('hidden');
+
+            if (tab === 'login') {
+                tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                tabRegister.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all";
+                confirmWrap.classList.add('hidden');
+                forgotWrap.classList.remove('hidden');
+                submitBtn.innerText = '登录';
+                document.getElementById('auth-password').autocomplete = 'current-password';
+            } else {
+                tabRegister.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition-all";
+                tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 transition-all";
+                confirmWrap.classList.remove('hidden');
+                forgotWrap.classList.add('hidden');
+                submitBtn.innerText = '注册新账号';
+                document.getElementById('auth-password').autocomplete = 'new-password';
+            }
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        function showAuthError(msg) {
+            const box = document.getElementById('auth-error');
+            document.getElementById('auth-error-text').innerText = msg;
+            box.classList.remove('hidden');
+        }
+
+        function clearAuthError() {
+            document.getElementById('auth-error').classList.add('hidden');
+        }
+
+        function setAuthLoading(loading) {
+            const btn = document.getElementById('auth-submit');
+            if (loading) {
+                btn.classList.add('btn-loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+            }
+        }
+
+        function withAuthTimeout(promise, ms = 15000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => {
+                    const err = new Error('Firebase 登录请求超时，请检查手机网络');
+                    err.code = 'auth/timeout';
+                    reject(err);
+                }, ms))
+            ]);
+        }
+
+        async function handleAuthSubmit() {
+            clearAuthError();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const confirmPwd = document.getElementById('auth-password-confirm').value;
+
+            if (!email || !password) {
+                showAuthError('请输入邮箱和密码');
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showAuthError('邮箱格式不正确');
+                return;
+            }
+            if (password.length < 6) {
+                showAuthError('密码至少需要 6 位字符');
+                return;
+            }
+
+            if (!auth) {
+                showAuthError('云端服务未初始化，请先配置 Firebase 项目');
+                return;
+            }
+
+            setAuthLoading(true);
+
+            try {
+                if (authTab === 'register') {
+                    if (password !== confirmPwd) {
+                        showAuthError('两次输入的密码不一致');
+                        setAuthLoading(false);
+                        return;
+                    }
+                    if (isMobileApp) {
+                        const u = await restSignIn(email,password,true);
+                        currentUser=u; isCloudAvailable=true; isOfflineMode=false; showApp();
+                        document.getElementById('settings-email').innerText=u.email;
+                        document.getElementById('user-uid-display').innerText=u.uid;
+                        updateCloudUI('success','云端已连接');
+                        try { await restPullCards(); } catch(e) { console.warn(e); }
+                        startRestPolling();
+                    } else {
+                        await withAuthTimeout(auth.createUserWithEmailAndPassword(email, password), 15000);
+                    }
+                } else {
+                    if (isMobileApp) {
+                        const u = await restSignIn(email,password,false);
+                        currentUser=u; isCloudAvailable=true; isOfflineMode=false; showApp();
+                        document.getElementById('settings-email').innerText=u.email;
+                        document.getElementById('user-uid-display').innerText=u.uid;
+                        updateCloudUI('success','云端已连接');
+                        try { await restPullCards(); } catch(e) { console.warn(e); }
+                        startRestPolling();
+                    } else {
+                        await withAuthTimeout(auth.signInWithEmailAndPassword(email, password), 15000);
+                    }
+                }
+            } catch (err) {
+                console.error('Auth error:', err);
+                setAuthLoading(false);
+                const code = err.code || '';
+                let msg = '操作失败，请重试';
+                if (code === 'auth/user-not-found') msg = '账号不存在，请先注册';
+                else if (code === 'auth/wrong-password') msg = '密码错误，请重新输入';
+                else if (code === 'auth/invalid-credential') msg = '邮箱或密码错误';
+                else if (code === 'auth/email-already-in-use') msg = '该邮箱已被注册，请直接登录';
+                else if (code === 'auth/weak-password') msg = '密码强度太弱，请使用至少 6 位字符';
+                else if (code === 'auth/too-many-requests') msg = '尝试次数过多，请稍后再试';
+                else if (code === 'auth/network-request-failed') msg = '网络连接失败，请检查网络';
+                else if (code === 'auth/timeout') msg = '登录请求超时，请检查手机网络后重试';
+                else if (code === 'auth/operation-not-allowed') msg = '邮箱登录未启用，请在 Firebase 控制台开启';
+                else if (err.message) msg = err.message;
+                showAuthError(msg);
+            }
+        }
+
+        async function handleForgotPassword() {
+            clearAuthError();
+            const email = document.getElementById('auth-email').value.trim();
+            if (!email) {
+                showAuthError('请先输入邮箱地址');
+                return;
+            }
+            if (!auth) {
+                showAuthError('云端服务未初始化');
+                return;
+            }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert('密码重置邮件已发送到 ' + email + '，请查收。');
+            } catch (err) {
+                showAuthError('发送失败：' + (err.code || err.message));
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('确定退出登录？退出后数据仍保存在云端，下次登录可继续使用。')) return;
+            if (isMobileApp) clearRestAuth();
+            try {
+                if (auth) await auth.signOut();
+                if (unsubscribeCardsListener) { unsubscribeCardsListener(); unsubscribeCardsListener = null; }
+                // 清空本地内存（保留 localStorage 中的备份）
+                appData.cards = [];
+                appData.logs = [];
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ============================================================
+        //  云端同步
+        // ============================================================
+        function updateCloudUI(state, text) {
+            const badge = document.getElementById('cloud-status-badge');
+            const icon = document.getElementById('cloud-status-icon');
+            const syncText = document.getElementById('sync-text');
+            const tag = document.getElementById('cloud-sync-tag');
+
+            if (syncText) syncText.innerText = text;
+
+            if (state === 'loading') {
+                badge.className = "px-2.5 py-1 rounded-full bg-blue-700 text-blue-100 flex items-center gap-1.5 border border-blue-500";
+                icon.className = "fa-solid fa-spinner fa-spin text-[10px]";
+            } else if (state === 'success') {
+                badge.className = "px-2.5 py-1 rounded-full bg-emerald-700 text-emerald-100 flex items-center gap-1.5 border border-emerald-500";
+                icon.className = "fa-solid fa-cloud-check text-[10px]";
+                if (tag) tag.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 云端实时同步`;
+            } else {
+                badge.className = "px-2.5 py-1 rounded-full bg-gray-600 text-gray-200 flex items-center gap-1.5 border border-gray-500";
+                icon.className = "fa-solid fa-hard-drive text-[10px]";
+                if (tag) tag.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 本地存储模式`;
+            }
+        }
+
+        function getCardsCollectionRef() {
+            return db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('cards');
+        }
+
+        // 初始拉取云端数据（一次性）
+        async function pullCloudData() {
+            if (!isCloudAvailable || !currentUser) return;
+            if (isMobileApp && restAuth) {
+                const cards=await restPullCards();
+                if(!cards.length && appData.cards.length) await restWriteCards(appData.cards);
+                return;
+            }
+            try {
+                const colRef = getCardsCollectionRef();
+                const snapshot = await colRef.get();
+                if (!snapshot.empty) {
+                    const cloudCards = [];
+                    snapshot.forEach(doc => {
+                        cloudCards.push({ id: doc.id, ...doc.data() });
+                    });
+                    appData.cards = cloudCards;
+                    saveToLocalStorageOnly();
+                } else {
+                    // 云端为空：如果本地有数据，推上去
+                    if (appData.cards.length > 0) {
+                        await pushAllToCloud(true);
+                    }
+                }
+            } catch (e) {
+                console.error('拉取云端数据失败:', e);
+            }
+        }
+
+        // 实时监听云端变更
+        function listenToCloudCollection() {
+            if (!isCloudAvailable || !currentUser) return;
+            if (isMobileApp && restAuth) { startRestPolling(); return; }
+            if (unsubscribeCardsListener) unsubscribeCardsListener();
+
+            const colRef = getCardsCollectionRef();
+
+            unsubscribeCardsListener = colRef.onSnapshot((snapshot) => {
+                const cloudCards = [];
+                snapshot.forEach(doc => {
+                    cloudCards.push({ id: doc.id, ...doc.data() });
+                });
+                if (cloudCards.length > 0) {
+                    appData.cards = cloudCards;
+                    saveToLocalStorageOnly();
+                    updateDashboard();
+                    renderCardsList();
+                }
+            }, (error) => {
+                console.error("监听云端数据异常:", error);
+                updateCloudUI('offline', '同步离线');
+            });
+        }
+
+        async function saveCardToCloud(card) {
+            if (!isCloudAvailable || !currentUser) return;
+            if (isMobileApp && restAuth) { try{await restWriteCards([card]);}catch(err){console.error('REST 保存失败:',err);} return; }
+            try {
+                const colRef = getCardsCollectionRef();
+                await colRef.doc(card.id).set(card, { merge: true });
+            } catch (err) {
+                console.error("保存卡片至云端失败:", err);
+            }
+        }
+
+        async function deleteCardFromCloud(cardId) {
+            if (!isCloudAvailable || !currentUser) return;
+            if (isMobileApp && restAuth) { try{await restDeleteCard(cardId);}catch(err){console.error('REST 删除失败:',err);} return; }
+            try {
+                const colRef = getCardsCollectionRef();
+                await colRef.doc(cardId).delete();
+            } catch (err) {
+                console.error("从云端删除卡片失败:", err);
+            }
+        }
+
+        async function pushCardsToCloud(cards, silent=false) {
+            if(!isCloudAvailable||!currentUser) throw new Error('当前未连接云端或尚未登录');
+            if(!cards||!cards.length)return 0;
+            if (isMobileApp && restAuth) { const n=await restWriteCards(cards); updateCloudUI('online',`已同步 ${appData.cards.length} 张`); return n; }
+            const colRef=getCardsCollectionRef(), chunkSize=450; let uploaded=0;
+            for(let i=0;i<cards.length;i+=chunkSize){const batch=db.batch();cards.slice(i,i+chunkSize).forEach(card=>batch.set(colRef.doc(card.id),card,{merge:true}));await batch.commit();uploaded+=Math.min(chunkSize,cards.length-i);}
+            updateCloudUI('online',`已同步 ${appData.cards.length} 张`); return uploaded;
+        }
+
+        async function pushAllToCloud(silent=false) {
+            if(!isCloudAvailable||!currentUser){if(!silent)alert('未连接云端，无法推送。');return;}
+            if(!silent&&!confirm(`确定将本地 ${appData.cards.length} 道题目推送到云端？`))return;
+            try{await pushCardsToCloud(appData.cards,silent);if(!silent)alert(`已成功推送 ${appData.cards.length} 道题目到云端！`);}catch(e){console.error(e);if(!silent)alert('推送失败：'+e.message);throw e;}
+        }
+        function reloadAllFromCloud() {
+            if (isCloudAvailable) {
+                pullCloudData().then(() => {
+                    alert('已成功刷新云端数据！');
+                    updateDashboard();
+                    renderCardsList();
+                });
+            } else {
+                alert('网络离线或未登录，无法拉取。');
+            }
+        }
+
+        function forcePushToCloud() {
+            pushAllToCloud(false);
+        }
+
+        // ============================================================
+        //  数据导入 / 导出
+        // ============================================================
+        function exportData() {
+            const json = JSON.stringify(appData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `flashcard_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.cards || !Array.isArray(data.cards)) {
+                        alert('无效的备份文件。');
+                        return;
+                    }
+                    if (confirm('导入将覆盖本地数据，确定继续？')) {
+                        appData.cards = data.cards;
+                        appData.logs = data.logs || [];
+                        saveToLocalStorageOnly();
+                        updateDashboard();
+                        renderCardsList();
+                        // 若有云端连接，询问是否上传
+                        if (isCloudAvailable && confirm('是否将导入的数据同步到云端？')) {
+                            pushAllToCloud(true);
+                        }
+                        alert('导入成功！');
+                    }
+                } catch (err) {
+                    alert('文件解析失败：' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearAllLocalData() {
+            if (confirm('确定清空本地所有数据？此操作不可恢复！')) {
+                appData.cards = [];
+                appData.logs = [];
+                saveToLocalStorageOnly();
+                updateDashboard();
+                renderCardsList();
+                alert('本地数据已清空。');
+            }
+        }
+
+        // ============================================================
+        //  题库选择弹窗
+        // ============================================================
+        function openDeckSelectModal(mode) {
+            currentStudyMode = mode;
+            if (appData.cards.length === 0) {
+                alert('题库中还没有卡片，请先去录入题目吧！');
+                switchTab('import');
+                return;
+            }
+
+            const title = document.getElementById('deck-modal-title');
+            title.innerText = mode === 'normal' ? '常规刷题 - 选择题库' : '错题专项突破 - 选择题库';
+
+            const container = document.getElementById('deck-select-list');
+            container.innerHTML = '';
+
+            const decks = ['全部题库', ...new Set(appData.cards.map(c => c.deck || '默认题库'))];
+            const now = Date.now();
+
+            decks.forEach(deckName => {
+                let count = 0;
+                if (mode === 'normal') {
+                    count = appData.cards.filter(c => 
+                        (deckName === '全部题库' || c.deck === deckName) && 
+                        (c.nextReviewTime <= now || c.status === 'unlearned')
+                    ).length;
+                } else {
+                    count = appData.cards.filter(c => 
+                        (deckName === '全部题库' || c.deck === deckName) && 
+                        (c.lastRating === 'forget' || c.lastRating === 'hard' || c.hardCount > 0)
+                    ).length;
+                }
+
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl flex justify-between items-center transition-all text-left text-xs font-bold text-gray-700";
+                btn.onclick = () => {
+                    closeModal('modal-deck-select');
+                    startStudyEngine(mode, deckName);
+                };
+                btn.innerHTML = `
+                    <span><i class="fa-solid fa-folder-open text-blue-500 mr-2"></i> ${deckName}</span>
+                    <span class="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full font-bold text-[10px]">${count} 题待刷</span>
+                `;
+                container.appendChild(btn);
+            });
+
+            document.getElementById('modal-deck-select').classList.remove('hidden');
+        }
+
+        // ============================================================
+        //  刷题引擎
+        // ============================================================
+        function startStudyEngine(mode, selectedDeck) {
+            const now = Date.now();
+            let pool = appData.cards;
+
+            if (selectedDeck !== '全部题库') {
+                pool = pool.filter(c => (c.deck || '默认题库') === selectedDeck);
+            }
+
+            if (mode === 'normal') {
+                currentStudyQueue = pool.filter(c => c.nextReviewTime <= now || c.status === 'unlearned');
+                document.getElementById('study-mode-tag').innerText = '常规刷题';
+            } else if (mode === 'wrong') {
+                currentStudyQueue = pool.filter(c => c.lastRating === 'forget' || c.lastRating === 'hard' || c.hardCount > 0);
+                document.getElementById('study-mode-tag').innerText = '错题专项';
+            }
+
+            if (currentStudyQueue.length === 0) {
+                alert(`在【${selectedDeck}】中没有找到需要刷的题目！`);
+                return;
+            }
+
+            document.getElementById('study-deck-tag').innerText = selectedDeck;
+            currentCardIndex = 0;
+            switchTab('study');
+            renderStudyCard();
+        }
+
+        function renderStudyCard() {
+            if (currentCardIndex >= currentStudyQueue.length) {
+                alert('本轮刷题已全部完成！');
+                switchTab('home');
+                return;
+            }
+
+            const card = currentStudyQueue[currentCardIndex];
+            selectedOptions = [];
+
+            document.getElementById('study-remaining-count').innerText = currentStudyQueue.length - currentCardIndex;
+            const studyPct = Math.round((currentCardIndex / currentStudyQueue.length) * 100);
+            const studyBar = document.getElementById('study-progress-bar'); if (studyBar) studyBar.style.width = studyPct + '%';
+            document.getElementById('study-card-type').innerText = card.type;
+            document.getElementById('study-card-deck').innerText = card.deck || '默认题库';
+            document.getElementById('study-card-question').innerText = card.question;
+
+            document.getElementById('btn-submit-answer').classList.remove('hidden');
+            document.getElementById('srs-rating-box').classList.add('hidden');
+
+            const container = document.getElementById('study-options-container');
+            container.innerHTML = '';
+
+            card.options.forEach((optText, index) => {
+                const optNum = index + 1;
+                const btn = document.createElement('button');
+                btn.id = `opt-btn-${optNum}`;
+                btn.className = "w-full text-left p-3.5 border border-gray-200 rounded-xl text-xs font-medium bg-gray-50 flex items-center justify-between transition-all active:scale-[0.99]";
+                btn.onclick = () => toggleOptionSelect(optNum, card.type);
+                btn.innerHTML = `
+                    <span>${optText}</span>
+                    <i id="opt-icon-${optNum}" class="fa-regular fa-circle text-gray-300 text-sm"></i>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleOptionSelect(optNum, type) {
+            if (type === '单选题' || type === '判断题') {
+                selectedOptions = [optNum];
+                document.querySelectorAll('#study-options-container button').forEach((btn, idx) => {
+                    const i = idx + 1;
+                    const icon = document.getElementById(`opt-icon-${i}`);
+                    if (i === optNum) {
+                        btn.className = "w-full text-left p-3.5 border-2 border-blue-500 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center justify-between";
+                        icon.className = "fa-solid fa-circle-check text-blue-600 text-sm";
+                    } else {
+                        btn.className = "w-full text-left p-3.5 border border-gray-200 rounded-xl text-xs font-medium bg-gray-50 flex items-center justify-between";
+                        icon.className = "fa-regular fa-circle text-gray-300 text-sm";
+                    }
+                });
+            } else {
+                const pos = selectedOptions.indexOf(optNum);
+                if (pos > -1) selectedOptions.splice(pos, 1);
+                else selectedOptions.push(optNum);
+
+                const btn = document.getElementById(`opt-btn-${optNum}`);
+                const icon = document.getElementById(`opt-icon-${optNum}`);
+                if (selectedOptions.includes(optNum)) {
+                    btn.className = "w-full text-left p-3.5 border-2 border-blue-500 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center justify-between";
+                    icon.className = "fa-solid fa-square-check text-blue-600 text-sm";
+                } else {
+                    btn.className = "w-full text-left p-3.5 border border-gray-200 rounded-xl text-xs font-medium bg-gray-50 flex items-center justify-between";
+                    icon.className = "fa-regular fa-square text-gray-300 text-sm";
+                }
+            }
+        }
+
+        function checkAnswer() {
+            if (selectedOptions.length === 0) {
+                alert('请先选择你的答案！');
+                return;
+            }
+
+            const card = currentStudyQueue[currentCardIndex];
+            card.options.forEach((_, idx) => {
+                const optNum = idx + 1;
+                const btn = document.getElementById(`opt-btn-${optNum}`);
+                if (card.answer.includes(optNum)) {
+                    btn.className = "w-full text-left p-3.5 border-2 border-emerald-500 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 flex items-center justify-between";
+                } else if (selectedOptions.includes(optNum)) {
+                    btn.className = "w-full text-left p-3.5 border-2 border-rose-500 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 flex items-center justify-between";
+                }
+            });
+
+            document.getElementById('btn-submit-answer').classList.add('hidden');
+            document.getElementById('srs-rating-box').classList.remove('hidden');
+        }
+
+        function rateCard(rating) {
+            const card = currentStudyQueue[currentCardIndex];
+            card.lastRating = rating;
+
+            if (rating === 'forget') {
+                card.interval = 0;
+                card.hardCount += 1;
+                card.status = 'learning';
+                card.nextReviewTime = Date.now() + 5 * 60 * 1000;
+            } else if (rating === 'hard') {
+                card.interval = Math.max(1, card.interval * 1.2);
+                card.hardCount += 1;
+                card.status = 'learning';
+                card.nextReviewTime = Date.now() + 12 * 3600 * 1000;
+            } else if (rating === 'normal') {
+                card.hardCount = 0;
+                card.interval = card.interval === 0 ? 1 : card.interval * 2;
+                card.status = 'learning';
+                card.nextReviewTime = Date.now() + card.interval * 24 * 3600 * 1000;
+            } else if (rating === 'easy') {
+                card.hardCount = 0;
+                card.interval = card.interval === 0 ? 3 : card.interval * 2.5;
+                card.status = 'mastered';
+                card.nextReviewTime = Date.now() + card.interval * 24 * 3600 * 1000;
+            }
+
+            appData.logs.push({
+                timestamp: Date.now(),
+                cardId: card.id,
+                rating
+            });
+
+            saveCardToCloud(card);
+            saveToLocalStorageOnly();
+
+            currentCardIndex++;
+            renderStudyCard();
+        }
+
+        // ============================================================
+        //  路由
+        // ============================================================
+        function switchTab(tabId) {
+            const views = ['home', 'import', 'study', 'analytics', 'ai', 'cards', 'settings'];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            ['home', 'import', 'analytics', 'ai', 'cards', 'settings'].forEach(nav => {
+                const btn = document.getElementById(`nav-${nav}`);
+                if (btn) {
+                    btn.className = (nav === tabId) 
+                        ? "flex flex-col items-center gap-1 text-blue-600 font-bold transition-colors"
+                        : "flex flex-col items-center gap-1 text-gray-400 font-bold transition-colors";
+                }
+            });
+
+            if (tabId === 'cards') renderCardsList();
+            if (tabId === 'home') updateDashboard();
+            if (tabId === 'settings') fillConfigForm();
+            if (tabId === 'analytics') renderAnalytics();
+            if (tabId === 'ai') refreshAIOverview();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // ============================================================
+        //  批量制卡
+        // ============================================================
+        function setImportType(type) {
+            appData.importType = type;
+            const btnChoice = document.getElementById('btn-type-choice');
+            const btnTf = document.getElementById('btn-type-tf');
+            const desc = document.getElementById('import-rules-desc');
+
+            if (type === 'choice') {
+                btnChoice.className = "p-3 text-xs font-bold rounded-xl border text-center border-blue-500 bg-blue-50 text-blue-600";
+                btnTf.className = "p-3 text-xs font-bold rounded-xl border text-center border-gray-200 bg-gray-50 text-gray-600";
+                desc.innerHTML = `
+                    <p class="font-bold"><i class="fa-solid fa-circle-info"></i> 选择题格式模板：</p>
+                    <p>• 题目与选项间用 <code class="bg-amber-100 px-1 py-0.5 rounded">**</code> 分隔，选项与答案间用 <code class="bg-amber-100 px-1 py-0.5 rounded">**</code> 分隔，每题间用 <code class="bg-amber-100 px-1 py-0.5 rounded">//</code> 分隔。</p>
+                    <p>• 选项换行分隔（无需加 ABC），答案填数字（第几个），多选用英文逗号隔开 (如 <code class="bg-amber-100 px-1 py-0.5 rounded">1,3</code>)。</p>
+                `;
+            } else {
+                btnTf.className = "p-3 text-xs font-bold rounded-xl border text-center border-blue-500 bg-blue-50 text-blue-600";
+                btnChoice.className = "p-3 text-xs font-bold rounded-xl border text-center border-gray-200 bg-gray-50 text-gray-600";
+                desc.innerHTML = `
+                    <p class="font-bold"><i class="fa-solid fa-circle-info"></i> 判断题格式模板：</p>
+                    <p>• 题目与答案用 <code class="bg-amber-100 px-1 py-0.5 rounded">**</code> 分隔，每题间用 <code class="bg-amber-100 px-1 py-0.5 rounded">//</code> 分隔。</p>
+                    <p>• 答案填 <code class="bg-amber-100 px-1 py-0.5 rounded">1</code> 表示正确，<code class="bg-amber-100 px-1 py-0.5 rounded">0</code> 表示错误。</p>
+                `;
+            }
+        }
+
+        async function processBatchImport() {
+            const deckName=document.getElementById('import-deck-name').value.trim()||'默认题库';
+            const rawText=document.getElementById('import-textarea').value.trim();
+            if(!rawText){alert('请填写录入内容！');return;}
+            const rawCards=rawText.split('//').map(s=>s.trim()).filter(Boolean); let count=0; const imported=[]; const now=Date.now();
+            rawCards.forEach((rawCard,index)=>{
+                const parts=rawCard.split('**').map(s=>s.trim()); let card=null;
+                if(appData.importType==='choice'&&parts.length>=3){const question=parts[0],options=parts[1].split('\n').map(o=>o.trim()).filter(Boolean),answers=parts[2].split(',').map(a=>parseInt(a.trim())).filter(n=>!isNaN(n)); card={id:'card_'+now+'_'+index+'_'+Math.random().toString(36).substr(2,6),deck:deckName,type:answers.length>1?'多选题':'单选题',question,options,answer:answers,status:'unlearned',lastRating:null,hardCount:0,createdAt:Date.now(),nextReviewTime:Date.now(),interval:0};}
+                else if(appData.importType==='tf'&&parts.length>=2){const question=parts[0],ansVal=parseInt(parts[1])===1?[1]:[2]; card={id:'card_'+now+'_'+index+'_'+Math.random().toString(36).substr(2,6),deck:deckName,type:'判断题',question,options:['正确','错误'],answer:ansVal,status:'unlearned',lastRating:null,hardCount:0,createdAt:Date.now(),nextReviewTime:Date.now(),interval:0};}
+                if(card){appData.cards.push(card);imported.push(card);count++;}
+            });
+            saveToLocalStorageOnly();
+            if(count){showToast(`已生成 ${count} 道题目，正在同步云端…`,'info'); try{await pushCardsToCloud(imported,true);showToast(`✅ 已同步 ${count} 道新题到云端`,'success');}catch(e){console.error(e);showToast('⚠️ 题目已保存本地，云同步失败','error');alert('题目已保存到本机，但云同步失败：\n'+e.message);}}
+            alert(`成功导入 ${count} 道题目至【${deckName}】！`); document.getElementById('import-textarea').value=''; switchTab('cards');
+        }
+
+        // ============================================================
+        //  卡片管理
+        // ============================================================
+        function renderCardsList() {
+            const container = document.getElementById('cards-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const deckSelect = document.getElementById('filter-deck');
+            const decks = ['all', ...new Set(appData.cards.map(c => c.deck || '默认题库'))];
+            const currentDeckVal = deckSelect.value;
+            deckSelect.innerHTML = '<option value="all">题库：全部</option>';
+            decks.filter(d => d !== 'all').forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.innerText = d;
+                deckSelect.appendChild(opt);
+            });
+            deckSelect.value = currentDeckVal;
+
+            const selectedDeck = deckSelect.value;
+            const typeF = document.getElementById('filter-type').value;
+            const statusF = document.getElementById('filter-status').value;
+            const ratingF = document.getElementById('filter-rating').value;
+            const searchF = (document.getElementById('card-search')?.value || '').trim().toLowerCase();
+
+            const now = Date.now();
+            let filtered = appData.cards.filter(c => {
+                if (searchF && !(`${c.question || ''} ${c.deck || '默认题库'} ${c.type || ''}`.toLowerCase().includes(searchF))) return false;
+                if (selectedDeck !== 'all' && (c.deck || '默认题库') !== selectedDeck) return false;
+                if (typeF === 'new' && c.status !== 'unlearned') return false;
+                if (typeF === 'review' && c.nextReviewTime > now) return false;
+                if (statusF !== 'all' && c.status !== statusF) return false;
+                if (ratingF !== 'all' && c.lastRating !== ratingF) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-xs">没有找到符合条件的卡片</div>`;
+                return;
+            }
+
+            filtered.forEach(card => {
+                const item = document.createElement('div');
+                item.className = "bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors";
+                item.onclick = () => openCardDetail(card.id);
+                item.innerHTML = `
+                    <div class="space-y-1 max-w-[80%]">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold">${card.type}</span>
+                            <span class="text-xs font-bold text-gray-800 truncate">${card.question}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 flex gap-3">
+                            <span>题库: ${card.deck || '默认题库'}</span>
+                            <span>状态: ${card.status}</span>
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteCard('${card.id}')" class="text-gray-300 hover:text-rose-500 p-2 text-sm">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-deck').value = 'all';
+            document.getElementById('filter-type').value = 'all';
+            document.getElementById('filter-status').value = 'all';
+            document.getElementById('filter-rating').value = 'all';
+            const search = document.getElementById('card-search'); if (search) search.value = '';
+            renderCardsList();
+        }
+
+        function openCardDetail(cardId) {
+            const card = appData.cards.find(c => c.id === cardId);
+            if (!card) return;
+
+            const modal = document.getElementById('modal-card-detail');
+            const content = document.getElementById('modal-detail-content');
+
+            content.innerHTML = `
+                <div><span class="font-bold text-gray-500">题目：</span><p class="font-bold text-gray-800 text-sm mt-1">${card.question}</p></div>
+                <div><span class="font-bold text-gray-500">选项：</span><p class="mt-1">${card.options.join(' | ')}</p></div>
+                <div><span class="font-bold text-gray-500">正确答案标号：</span><span class="text-emerald-600 font-bold">${card.answer.join(', ')}</span></div>
+                <div class="pt-2 border-t grid grid-cols-2 gap-2 text-gray-500">
+                    <div>所属题库：<b class="text-gray-700">${card.deck || '默认题库'}</b></div>
+                    <div>掌握状态：<b class="text-blue-600">${card.status}</b></div>
+                    <div>困难标记：<b class="${card.hardCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">${card.hardCount > 0 ? '错题集' : '正常'}</b></div>
+                    <div>下次复习：<b class="text-gray-700">${new Date(card.nextReviewTime).toLocaleDateString()}</b></div>
+                </div>
+                <div class="pt-4 border-t flex gap-3">
+                    <button onclick="openCardEdit('${card.id}')" class="flex-1 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 py-2 rounded-lg text-xs font-bold transition-colors">修改内容</button>
+                    <button onclick="deleteCard('${card.id}'); closeModal('modal-card-detail')" class="flex-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 py-2 rounded-lg text-xs font-bold transition-colors">删除卡片</button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        let currentEditCardId = null;
+
+        function openCardEdit(cardId) {
+            const card = appData.cards.find(c => c.id === cardId);
+            if (!card) return;
+            currentEditCardId = cardId;
+            
+            document.getElementById('edit-deck').value = card.deck || '默认题库';
+            document.getElementById('edit-question').value = card.question;
+            document.getElementById('edit-options').value = card.options.join('\n');
+            document.getElementById('edit-answer').value = card.answer.join(',');
+            
+            closeModal('modal-card-detail');
+            document.getElementById('modal-card-edit').classList.remove('hidden');
+        }
+
+        function saveCardEdit() {
+            if (!currentEditCardId) return;
+            const card = appData.cards.find(c => c.id === currentEditCardId);
+            if (!card) return;
+            
+            card.deck = document.getElementById('edit-deck').value.trim() || '默认题库';
+            card.question = document.getElementById('edit-question').value.trim();
+            const opts = document.getElementById('edit-options').value.split('\n').map(s => s.trim()).filter(Boolean);
+            card.options = opts;
+            const ans = document.getElementById('edit-answer').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            card.answer = ans;
+            
+            if (ans.length > 1) {
+                card.type = '多选题';
+            } else if (opts.length === 2 && opts.includes('正确') && opts.includes('错误')) {
+                card.type = '判断题';
+            } else {
+                card.type = '单选题';
+            }
+            
+            saveCardToCloud(card);
+            saveToLocalStorageOnly();
+            renderCardsList();
+            updateDashboard();
+            
+            closeModal('modal-card-edit');
+            openCardDetail(currentEditCardId);
+        }
+
+        function deleteCard(cardId) {
+            if (confirm('确定删除这张卡片？删除将同步到云端。')) {
+                appData.cards = appData.cards.filter(c => c.id !== cardId);
+                deleteCardFromCloud(cardId);
+                saveToLocalStorageOnly();
+                renderCardsList();
+                updateDashboard();
+            }
+        }
+
+        // ============================================================
+        //  看板 & 持久化
+        // ============================================================
+        function updateDashboard() {
+            const now = Date.now();
+            const newCards = appData.cards.filter(c => c.status === 'unlearned').length;
+            const reviewCards = appData.cards.filter(c => c.nextReviewTime <= now && c.status !== 'unlearned').length;
+            const wrongCards = appData.cards.filter(c => c.lastRating === 'forget' || c.lastRating === 'hard' || c.hardCount > 0).length;
+            
+            const todayStr = new Date().toDateString();
+            const todayLogs = appData.logs.filter(l => new Date(l.timestamp).toDateString() === todayStr);
+
+            document.getElementById('dash-new-count').innerText = newCards;
+            document.getElementById('dash-review-count').innerText = reviewCards;
+            document.getElementById('dash-done-count').innerText = todayLogs.length;
+            document.getElementById('dash-time').innerText = Math.round(todayLogs.length * 0.5);
+            const totalToday = todayLogs.length + appData.cards.filter(c => c.nextReviewTime <= Date.now() || c.status === 'unlearned').length;
+            const progress = totalToday ? Math.min(100, Math.round(todayLogs.length / totalToday * 100)) : 0;
+            const pText = document.getElementById('dash-progress-text'); const pBar = document.getElementById('dash-progress-bar');
+            if (pText) pText.innerText = progress + '%'; if (pBar) pBar.style.width = progress + '%';
+
+            document.getElementById('stat-total').innerText = appData.cards.length;
+            document.getElementById('stat-learning').innerText = appData.cards.filter(c => c.status === 'learning').length;
+            document.getElementById('stat-wrong').innerText = wrongCards;
+            document.getElementById('stat-mastered').innerText = appData.cards.filter(c => c.status === 'mastered').length;
+        }
+
+        function saveToLocalStorageOnly() {
+            localStorage.setItem('flashcard_app_data', JSON.stringify(appData));
+            updateDashboard();
+        }
+
+        function loadLocalData() {
+            const stored = localStorage.getItem('flashcard_app_data');
+            if (stored) {
+                try { appData = JSON.parse(stored); } catch (e) {}
+            }
+        }
+        // ============================================================
+        // 2.0 增强：主题、快捷键、Toast、自动保存体验
+        // ============================================================
+        function toggleTheme() {
+            const dark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('flashcard_theme', dark ? 'dark' : 'light');
+            const icon = document.querySelector('#theme-toggle i');
+            if (icon) icon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function restoreTheme() {
+            if (localStorage.getItem('flashcard_theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                const icon = document.querySelector('#theme-toggle i');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            }
+        }
+
+        function showToast(message, type='info') {
+            let box = document.getElementById('upgrade-toast');
+            if (!box) {
+                box = document.createElement('div');
+                box.id='upgrade-toast';
+                box.className='fixed left-1/2 -translate-x-1/2 bottom-24 z-[200] px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none';
+                document.body.appendChild(box);
+            }
+            box.className='fixed left-1/2 -translate-x-1/2 bottom-24 z-[200] px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold transition-all duration-300 opacity-100 pointer-events-none '+(type==='success'?'bg-emerald-600 text-white':type==='error'?'bg-rose-600 text-white':'bg-gray-900 text-white');
+            box.textContent=message;
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer=setTimeout(()=>box.classList.replace('opacity-100','opacity-0'),2200);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('view-study')?.classList.contains('hidden')) return;
+            if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+            const n = parseInt(e.key);
+            if (n>=1 && n<=4) {
+                const card=currentStudyQueue[currentCardIndex];
+                if (card && n<=card.options.length) { toggleOptionSelect(n, card.type); e.preventDefault(); }
+            } else if (e.key==='Enter') {
+                const btn=document.getElementById('btn-submit-answer');
+                if (btn && !btn.classList.contains('hidden')) { checkAnswer(); e.preventDefault(); }
+            } else if (e.key==='ArrowLeft' || e.key==='ArrowRight') {
+                const card=currentStudyQueue[currentCardIndex];
+                if (card) { const step=e.key==='ArrowLeft'?-1:1; const idx=(selectedOptions[0]||1)-1+step; if(idx>=0&&idx<card.options.length) toggleOptionSelect(idx+1,card.type); e.preventDefault(); }
+            }
+        });
+
+
+        // ===== 极速卡包 3.0 学习分析 =====
+        function getLogDate(log){
+            const t = log.timestamp || log.time || log.createdAt || log.date;
+            const d = t ? new Date(typeof t==='number'?t:t) : null;
+            return d && !isNaN(d) ? d.toISOString().slice(0,10) : null;
+        }
+        function renderAnalytics(){
+            const logs = Array.isArray(appData.logs) ? appData.logs : [];
+            const dated = logs.map(l=>({l,d:getLogDate(l)})).filter(x=>x.d);
+            const correct = logs.filter(l=>['easy','normal'].includes(l.rating)).length;
+            const answered = logs.filter(l=>l.rating).length;
+            const totalDone = logs.length;
+            const acc = answered ? Math.round(correct/answered*100) : 0;
+            const mastered = appData.cards.filter(c=>c.status==='mastered').length;
+            let streak=0, cursor=new Date(); cursor.setHours(0,0,0,0);
+            const dates=new Set(dated.map(x=>x.d));
+            while(dates.has(cursor.toISOString().slice(0,10))){ streak++; cursor.setDate(cursor.getDate()-1); }
+            const ids={'an-total-done':totalDone,'an-accuracy':acc+'%','an-streak':streak+' 天','an-mastered':mastered};
+            Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=v});
+            const counts=[]; const labels=[]; const now=new Date();
+            for(let i=13;i>=0;i--){const d=new Date(now);d.setHours(0,0,0,0);d.setDate(now.getDate()-i);const key=d.toISOString().slice(0,10);labels.push((d.getMonth()+1)+'/'+d.getDate());counts.push(dated.filter(x=>x.d===key).length)}
+            const max=Math.max(1,...counts); const chart=document.getElementById('an-chart');
+            if(chart) chart.innerHTML=counts.map((v,i)=>`<div class="v3-bar" style="height:${Math.max(6,Math.round(v/max*145))}px" title="${labels[i]}：${v}题"><span>${labels[i]}</span></div>`).join('');
+            const cal=document.getElementById('an-calendar'); const title=document.getElementById('an-calendar-title');
+            if(cal){const y=now.getFullYear(),m=now.getMonth(); title.textContent=`${y}年${m+1}月`; const first=new Date(y,m,1).getDay(); const days=new Date(y,m+1,0).getDate(); let html=''; for(let i=0;i<first;i++) html+='<div></div>'; for(let day=1;day<=days;day++){const d=new Date(y,m,day);const key=d.toISOString().slice(0,10);const cls=(day===now.getDate()?' active':'')+(dates.has(key)?' haslog':'');html+=`<div class="v3-day${cls}">${day}</div>`} cal.innerHTML=html;}
+            const decks=[...new Set(appData.cards.map(c=>c.deck||'默认题库'))]; const box=document.getElementById('an-decks');
+            if(box) box.innerHTML=decks.length?decks.map(deck=>{const cs=appData.cards.filter(c=>(c.deck||'默认题库')===deck);const masteredD=cs.filter(c=>c.status==='mastered').length;const pct=cs.length?Math.round(masteredD/cs.length*100):0;return `<div class="v3-deck-row"><div><div class="text-xs font-bold truncate">${escapeHtml(deck)}</div><div class="v3-mini-progress mt-2"><i style="width:${pct}%"></i></div></div><div class="text-right"><div class="text-xs font-black">${cs.length}</div><div class="text-[9px] text-gray-400">卡片</div></div><div class="text-right"><div class="text-xs font-black text-indigo-600">${pct}%</div><div class="text-[9px] text-gray-400">掌握</div></div></div>`}).join(''):'<div class="text-xs text-gray-400 py-4 text-center">还没有题库数据</div>';
+        }
+        function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+        // ===== 极速卡包 4.0 智能学习引擎（本地规则版） =====
+        function dueCards(){ const now=Date.now(); return appData.cards.filter(c => !c.nextReviewTime || c.nextReviewTime<=now); }
+        function weakCards(){ return appData.cards.filter(c=>c.lastRating==='forget'||c.lastRating==='hard'||(c.hardCount||0)>=2); }
+        function refreshAIOverview(){
+            const due=dueCards(), weak=weakCards();
+            const d=document.getElementById('ai-due'), w=document.getElementById('ai-weak');
+            if(d)d.textContent=due.length; if(w)w.textContent=weak.length;
+            const goal=Math.min(30,Math.max(10,Math.ceil((due.length+weak.length)/2))); const g=document.getElementById('ai-goal'); if(g)g.textContent=goal;
+        }
+        function generateSmartPlan(){
+            const due=dueCards().sort((a,b)=>(b.hardCount||0)-(a.hardCount||0));
+            const weak=weakCards().filter(c=>!due.includes(c));
+            const plan=[...due.slice(0,8),...weak.slice(0,6)];
+            const box=document.getElementById('ai-plan'); if(!box)return;
+            if(!plan.length){box.innerHTML='<div class="v4-empty">今天没有明显的复习压力，可以用新卡学习或巩固任意题库。</div>';return;}
+            const groups=[...new Set(plan.map(c=>c.deck||'默认题库'))];
+            box.innerHTML=plan.slice(0,10).map((c,i)=>`<div class="v4-plan-row"><div class="v4-num">${i+1}</div><div><div class="text-xs font-bold truncate">${escapeHtml(c.question||'未命名卡片')}</div><div class="text-[9px] text-gray-400 mt-1">${escapeHtml(c.deck||'默认题库')} · ${c.lastRating==='forget'?'重点重学':c.lastRating==='hard'?'困难复习':'到期复习'}</div></div><button onclick="startSmartCard('${c.id}')" class="text-[10px] font-black text-indigo-600">开始</button></div>`).join('');
+            showToast(`已生成 ${Math.min(plan.length,10)} 个今日学习任务`,'success');
+        }
+        function startSmartCard(id){ const c=appData.cards.find(x=>x.id===id); if(!c)return; currentStudyQueue=[c]; currentCardIndex=0; currentStudyMode='normal'; switchTab('study'); renderStudyCard(); }
+        function analyzeWeakness(){
+            const box=document.getElementById('ai-weak-list'); if(!box)return;
+            const weak=weakCards();
+            if(!weak.length){box.innerHTML='<div class="v4-empty">暂未发现明显弱项。继续完成几轮练习后，这里会自动出现重点。</div>';return;}
+            const map={}; weak.forEach(c=>{const k=c.deck||'默认题库';map[k]=(map[k]||0)+1}); const rows=Object.entries(map).sort((a,b)=>b[1]-a[1]); const max=Math.max(...rows.map(x=>x[1]));
+            box.innerHTML=rows.map(([deck,n])=>`<div class="mb-4"><div class="flex justify-between text-xs font-bold"><span>${escapeHtml(deck)}</span><span class="text-rose-500">${n} 张弱项卡</span></div><div class="v4-progress mt-2"><i style="width:${Math.round(n/max*100)}%"></i></div></div>`).join('');
+            showToast('弱项分析完成','success');
+        }
+        function openSmartGenerator(){ document.getElementById('ai-generator')?.classList.remove('hidden'); document.getElementById('ai-source')?.focus(); }
+        function closeSmartGenerator(){ document.getElementById('ai-generator')?.classList.add('hidden'); }
+        function generateCardsFromNotes(){
+            const text=(document.getElementById('ai-source')?.value||'').trim(), deck=(document.getElementById('ai-deck')?.value||'AI生成题库').trim()||'AI生成题库'; const out=document.getElementById('ai-generated');
+            if(!text){showToast('请先粘贴学习内容','error');return;}
+            const lines=text.split(/\n+/).map(x=>x.trim()).filter(x=>x.length>12); const made=[];
+            lines.slice(0,12).forEach((line,i)=>{ const parts=line.split(/[。！？；;]/); const stmt=parts[0].trim(); if(stmt.length<8)return; const key=(stmt.match(/^[^，,：:]{2,18}[是为有包括由]/)||[])[0]?.replace(/[是为有包括由]$/,'').trim() || stmt.slice(0,12); const q=`关于“${key}”，以下说法与笔记内容一致的是？`; const opts=[stmt,'以上内容与笔记不符','该概念与网络学习无关','无法从笔记判断']; const card={id:'card_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),deck,type:'单选题',question:q,options:opts,answer:[1],status:'unlearned',lastRating:null,hardCount:0,createdAt:Date.now(),nextReviewTime:Date.now(),interval:0}; made.push(card); });
+            if(!made.length){showToast('内容太短，建议每行写一个完整知识点','error');return;}
+            appData.cards.push(...made); made.forEach(c=>saveCardToCloud(c)); saveToLocalStorageOnly(); updateDashboard(); renderCardsList();
+            out.innerHTML=made.map((c,i)=>`<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-xs"><b>${i+1}. ${escapeHtml(c.question)}</b><div class="text-[10px] text-gray-500 mt-1">答案：${escapeHtml(c.options[0])}</div></div>`).join('');
+            showToast(`已生成 ${made.length} 张卡片`,'success');
+        }
+        let v4Timer=null,v4Seconds=25*60;
+        function startFocusTimer(){
+            if(v4Timer){clearInterval(v4Timer);v4Timer=null;}
+            v4Seconds=25*60; showFocusModal();
+            v4Timer=setInterval(()=>{v4Seconds--;renderFocusTime();if(v4Seconds<=0){clearInterval(v4Timer);v4Timer=null;showToast('专注完成，休息一下吧！','success');}},1000);
+        }
+        function renderFocusTime(){const el=document.getElementById('v4-focus-time');if(el)el.textContent=`${String(Math.floor(v4Seconds/60)).padStart(2,'0')}:${String(v4Seconds%60).padStart(2,'0')}`;}
+        function showFocusModal(){let m=document.getElementById('v4-focus-modal');if(!m){m=document.createElement('div');m.id='v4-focus-modal';m.className='fixed inset-0 z-[280] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-5';m.innerHTML='<div class="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center w-full max-w-sm shadow-2xl"><div class="text-xs font-black text-indigo-600 tracking-widest">FOCUS MODE</div><div id="v4-focus-time" class="v4-focus mt-3">25:00</div><p class="text-xs text-gray-400 mt-2">25 分钟专注学习，不切换任务</p><button onclick="stopFocusTimer()" class="mt-6 w-full py-3 rounded-xl bg-gray-900 text-white text-xs font-black">结束专注</button></div>';document.body.appendChild(m)}m.classList.remove('hidden');renderFocusTime();}
+        function stopFocusTimer(){if(v4Timer){clearInterval(v4Timer);v4Timer=null;}document.getElementById('v4-focus-modal')?.classList.add('hidden');}
+        function openCommandPalette(){let m=document.getElementById('v4-command');if(!m){m=document.createElement('div');m.id='v4-command';m.className='v4-command';m.innerHTML='<div class="v4-command-box"><div class="p-3"><input id="v4-command-input" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="搜索功能…" oninput="filterCommands()"></div><div id="v4-command-list"></div></div>';document.body.appendChild(m)}m.classList.add('show');document.getElementById('v4-command-input').focus();renderCommands();}
+        function renderCommands(){const list=document.getElementById('v4-command-list');if(!list)return;const items=[['学习首页','home','fa-house'],['学习分析','analytics','fa-chart-line'],['智能助手','ai','fa-sparkles'],['批量制卡','import','fa-plus-circle'],['卡片库','cards','fa-layer-group'],['设置','settings','fa-gear']];list.innerHTML=items.map(x=>`<div class="v4-command-item" data-name="${x[0]}" onclick="closeCommandPalette();switchTab('${x[1]}')"><i class="fa-solid ${x[2]} text-indigo-600 w-5 text-center"></i><span class="text-sm font-bold">${x[0]}</span></div>`).join('');}
+        function filterCommands(){const q=(document.getElementById('v4-command-input')?.value||'').toLowerCase();document.querySelectorAll('.v4-command-item').forEach(x=>x.style.display=x.dataset.name.toLowerCase().includes(q)?'flex':'none');}
+        function closeCommandPalette(){document.getElementById('v4-command')?.classList.remove('show');}
+        document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCommandPalette();}if(e.key==='Escape'){closeCommandPalette();stopFocusTimer();}});
+        try{renderAnalytics();refreshAIOverview();}catch(e){}
+        restoreTheme();
+    </script>
+</body>
+</html>
